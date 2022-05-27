@@ -46,7 +46,10 @@ export class RemotePackage extends Package implements IRemotePackage {
       LocalPackage.DownloadDir + "/" + LocalPackage.PackageUpdateFileName;
     const fullPath = await FileUtil.getUri(Directory.Data, file);
 
+    console.log(downloadProgress);
+
     const updateProgress = (e: ProgressStatus) => {
+      console.log(e);
       downloadProgress &&
         downloadProgress({
           totalBytes: e.contentLength,
@@ -81,6 +84,7 @@ export class RemotePackage extends Package implements IRemotePackage {
         method: "GET",
         filePath: file,
         fileDirectory: Directory.Data,
+        progress: true,
         responseType: "blob",
       });
     } catch (e) {

@@ -1099,7 +1099,9 @@ var capacitorPlugin = (function (exports, acquisitionSdk, filesystem, core, http
                 this.isDownloading = true;
                 const file = LocalPackage.DownloadDir + "/" + LocalPackage.PackageUpdateFileName;
                 const fullPath = yield FileUtil.getUri(filesystem.Directory.Data, file);
+                console.log(downloadProgress);
                 const updateProgress = (e) => {
+                    console.log(e);
                     downloadProgress &&
                         downloadProgress({
                             totalBytes: e.contentLength,
@@ -1125,6 +1127,7 @@ var capacitorPlugin = (function (exports, acquisitionSdk, filesystem, core, http
                         method: "GET",
                         filePath: file,
                         fileDirectory: filesystem.Directory.Data,
+                        progress: true,
                         responseType: "blob",
                     });
                 }

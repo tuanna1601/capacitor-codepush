@@ -38,7 +38,9 @@ export class RemotePackage extends Package {
             this.isDownloading = true;
             const file = LocalPackage.DownloadDir + "/" + LocalPackage.PackageUpdateFileName;
             const fullPath = yield FileUtil.getUri(Directory.Data, file);
+            console.log(downloadProgress);
             const updateProgress = (e) => {
+                console.log(e);
                 downloadProgress &&
                     downloadProgress({
                         totalBytes: e.contentLength,
@@ -64,6 +66,7 @@ export class RemotePackage extends Package {
                     method: "GET",
                     filePath: file,
                     fileDirectory: Directory.Data,
+                    progress: true,
                     responseType: "blob",
                 });
             }
