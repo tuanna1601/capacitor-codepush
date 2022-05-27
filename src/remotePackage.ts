@@ -2,17 +2,21 @@ import { SuccessCallback } from "./callbackUtil";
 import { CodePushUtil } from "./codePushUtil";
 import { LocalPackage } from "./localPackage";
 import { NativeAppInfo } from "./nativeAppInfo";
-import { DownloadProgress, ILocalPackage, IRemotePackage, Package } from "./package";
+import {
+  DownloadProgress,
+  ILocalPackage,
+  IRemotePackage,
+  Package,
+} from "./package";
 import { Sdk } from "./sdk";
 import { Directory, Filesystem } from "@capacitor/filesystem";
 import { FileUtil } from "./fileUtil";
-import { Http } from "@capacitor-community/http";
+import { Http, ProgressStatus } from "@capacitor-community/http";
 
 /**
  * Defines a remote package, which represents an update package available for download.
  */
 export class RemotePackage extends Package implements IRemotePackage {
-
   private isDownloading: boolean = false;
 
   /**
@@ -26,20 +30,40 @@ export class RemotePackage extends Package implements IRemotePackage {
    *
    * @param downloadProgress Optional callback invoked during the download process. It is called several times with one DownloadProgress parameter.
    */
-  public async download(downloadProgress?: SuccessCallback<DownloadProgress>): Promise<ILocalPackage> {
+  public async download(
+    downloadProgress?: SuccessCallback<DownloadProgress>
+  ): Promise<ILocalPackage> {
     CodePushUtil.logMessage("Downloading update");
     if (!this.downloadUrl) {
-      CodePushUtil.throwError(new Error("The remote package does not contain a download URL."));
+      CodePushUtil.throwError(
+        new Error("The remote package does not contain a download URL.")
+      );
     }
 
     this.isDownloading = true;
 
-    const file = LocalPackage.DownloadDir + "/" + LocalPackage.PackageUpdateFileName;
+    const file =
+      LocalPackage.DownloadDir + "/" + LocalPackage.PackageUpdateFileName;
     const fullPath = await FileUtil.getUri(Directory.Data, file);
+
+    const updateProgress = (e: ProgressStatus) => {
+      downloadProgress &&
+        downloadProgress({
+          totalBytes: e.contentLength,
+          receivedBytes: e.bytes,
+        });
+    };
+
+    const listener = await Http.addListener("progress", updateProgress);
 
     try {
       // create directory if not exists
-      if (!(await FileUtil.directoryExists(Directory.Data, LocalPackage.DownloadDir))) {
+      if (
+        !(await FileUtil.directoryExists(
+          Directory.Data,
+          LocalPackage.DownloadDir
+        ))
+      ) {
         await Filesystem.mkdir({
           path: LocalPackage.DownloadDir,
           directory: Directory.Data,
@@ -57,12 +81,19 @@ export class RemotePackage extends Package implements IRemotePackage {
         method: "GET",
         filePath: file,
         fileDirectory: Directory.Data,
-        responseType: "blob"
+        responseType: "blob",
       });
     } catch (e) {
-      CodePushUtil.throwError(new Error("An error occured while downloading the package. " + (e && e.message) ? e.message : ""));
+      CodePushUtil.throwError(
+        new Error(
+          "An error occured while downloading the package. " + (e && e.message)
+            ? e.message
+            : ""
+        )
+      );
     } finally {
       this.isDownloading = false;
+      await listener.remove();
     }
 
     const installFailed = await NativeAppInfo.isFailedUpdate(this.packageHash);
@@ -77,7 +108,9 @@ export class RemotePackage extends Package implements IRemotePackage {
     localPackage.failedInstall = installFailed;
     localPackage.localPath = fullPath;
 
-    CodePushUtil.logMessage("Package download success: " + JSON.stringify(localPackage));
+    CodePushUtil.logMessage(
+      "Package download success: " + JSON.stringify(localPackage)
+    );
     Sdk.reportStatusDownload(localPackage, localPackage.deploymentKey);
 
     return localPackage;

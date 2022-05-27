@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { CodePushUtil } from "./codePushUtil";
 import { LocalPackage } from "./localPackage";
 import { NativeAppInfo } from "./nativeAppInfo";
-import { Package } from "./package";
+import { Package, } from "./package";
 import { Sdk } from "./sdk";
 import { Directory, Filesystem } from "@capacitor/filesystem";
 import { FileUtil } from "./fileUtil";
@@ -38,6 +38,14 @@ export class RemotePackage extends Package {
             this.isDownloading = true;
             const file = LocalPackage.DownloadDir + "/" + LocalPackage.PackageUpdateFileName;
             const fullPath = yield FileUtil.getUri(Directory.Data, file);
+            const updateProgress = (e) => {
+                downloadProgress &&
+                    downloadProgress({
+                        totalBytes: e.contentLength,
+                        receivedBytes: e.bytes,
+                    });
+            };
+            const listener = yield Http.addListener("progress", updateProgress);
             try {
                 // create directory if not exists
                 if (!(yield FileUtil.directoryExists(Directory.Data, LocalPackage.DownloadDir))) {
@@ -56,14 +64,17 @@ export class RemotePackage extends Package {
                     method: "GET",
                     filePath: file,
                     fileDirectory: Directory.Data,
-                    responseType: "blob"
+                    responseType: "blob",
                 });
             }
             catch (e) {
-                CodePushUtil.throwError(new Error("An error occured while downloading the package. " + (e && e.message) ? e.message : ""));
+                CodePushUtil.throwError(new Error("An error occured while downloading the package. " + (e && e.message)
+                    ? e.message
+                    : ""));
             }
             finally {
                 this.isDownloading = false;
+                yield listener.remove();
             }
             const installFailed = yield NativeAppInfo.isFailedUpdate(this.packageHash);
             const localPackage = new LocalPackage();

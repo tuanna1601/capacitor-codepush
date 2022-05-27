@@ -1099,6 +1099,14 @@ var capacitorPlugin = (function (exports, acquisitionSdk, filesystem, core, http
                 this.isDownloading = true;
                 const file = LocalPackage.DownloadDir + "/" + LocalPackage.PackageUpdateFileName;
                 const fullPath = yield FileUtil.getUri(filesystem.Directory.Data, file);
+                const updateProgress = (e) => {
+                    downloadProgress &&
+                        downloadProgress({
+                            totalBytes: e.contentLength,
+                            receivedBytes: e.bytes,
+                        });
+                };
+                const listener = yield http.Http.addListener("progress", updateProgress);
                 try {
                     // create directory if not exists
                     if (!(yield FileUtil.directoryExists(filesystem.Directory.Data, LocalPackage.DownloadDir))) {
@@ -1117,14 +1125,17 @@ var capacitorPlugin = (function (exports, acquisitionSdk, filesystem, core, http
                         method: "GET",
                         filePath: file,
                         fileDirectory: filesystem.Directory.Data,
-                        responseType: "blob"
+                        responseType: "blob",
                     });
                 }
                 catch (e) {
-                    CodePushUtil.throwError(new Error("An error occured while downloading the package. " + (e && e.message) ? e.message : ""));
+                    CodePushUtil.throwError(new Error("An error occured while downloading the package. " + (e && e.message)
+                        ? e.message
+                        : ""));
                 }
                 finally {
                     this.isDownloading = false;
+                    yield listener.remove();
                 }
                 const installFailed = yield NativeAppInfo.isFailedUpdate(this.packageHash);
                 const localPackage = new LocalPackage();
