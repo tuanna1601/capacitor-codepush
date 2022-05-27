@@ -1099,9 +1099,7 @@ var capacitorPlugin = (function (exports, acquisitionSdk, filesystem, core, http
                 this.isDownloading = true;
                 const file = LocalPackage.DownloadDir + "/" + LocalPackage.PackageUpdateFileName;
                 const fullPath = yield FileUtil.getUri(filesystem.Directory.Data, file);
-                console.log(downloadProgress);
                 const updateProgress = (e) => {
-                    console.log(e);
                     downloadProgress &&
                         downloadProgress({
                             totalBytes: e.contentLength,
@@ -1151,7 +1149,9 @@ var capacitorPlugin = (function (exports, acquisitionSdk, filesystem, core, http
                 localPackage.isFirstRun = false;
                 localPackage.failedInstall = installFailed;
                 localPackage.localPath = fullPath;
-                CodePushUtil.logMessage("Package download success: " + JSON.stringify(localPackage));
+                // CodePushUtil.logMessage(
+                //   "Package download success: " + JSON.stringify(localPackage)
+                // );
                 Sdk.reportStatusDownload(localPackage, localPackage.deploymentKey);
                 return localPackage;
             });

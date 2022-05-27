@@ -46,10 +46,7 @@ export class RemotePackage extends Package implements IRemotePackage {
       LocalPackage.DownloadDir + "/" + LocalPackage.PackageUpdateFileName;
     const fullPath = await FileUtil.getUri(Directory.Data, file);
 
-    console.log(downloadProgress);
-
     const updateProgress = (e: ProgressStatus) => {
-      console.log(e);
       downloadProgress &&
         downloadProgress({
           totalBytes: e.contentLength,
@@ -112,9 +109,9 @@ export class RemotePackage extends Package implements IRemotePackage {
     localPackage.failedInstall = installFailed;
     localPackage.localPath = fullPath;
 
-    CodePushUtil.logMessage(
-      "Package download success: " + JSON.stringify(localPackage)
-    );
+    // CodePushUtil.logMessage(
+    //   "Package download success: " + JSON.stringify(localPackage)
+    // );
     Sdk.reportStatusDownload(localPackage, localPackage.deploymentKey);
 
     return localPackage;

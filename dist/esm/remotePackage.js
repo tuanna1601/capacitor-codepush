@@ -38,9 +38,7 @@ export class RemotePackage extends Package {
             this.isDownloading = true;
             const file = LocalPackage.DownloadDir + "/" + LocalPackage.PackageUpdateFileName;
             const fullPath = yield FileUtil.getUri(Directory.Data, file);
-            console.log(downloadProgress);
             const updateProgress = (e) => {
-                console.log(e);
                 downloadProgress &&
                     downloadProgress({
                         totalBytes: e.contentLength,
@@ -90,7 +88,9 @@ export class RemotePackage extends Package {
             localPackage.isFirstRun = false;
             localPackage.failedInstall = installFailed;
             localPackage.localPath = fullPath;
-            CodePushUtil.logMessage("Package download success: " + JSON.stringify(localPackage));
+            // CodePushUtil.logMessage(
+            //   "Package download success: " + JSON.stringify(localPackage)
+            // );
             Sdk.reportStatusDownload(localPackage, localPackage.deploymentKey);
             return localPackage;
         });
