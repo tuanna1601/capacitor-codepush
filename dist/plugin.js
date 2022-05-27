@@ -1648,6 +1648,7 @@ var capacitorPlugin = (function (exports, acquisitionSdk, filesystem, core, http
     window.codePush = codePush;
 
     exports.CodePush = CodePush;
+    exports.RemotePackage = RemotePackage;
     exports.codePush = codePush;
 
     Object.defineProperty(exports, '__esModule', { value: true });
